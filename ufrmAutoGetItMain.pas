@@ -112,9 +112,9 @@ end;
 function TfrmAutoGetItMain.GetItInstallCmd(const GetItPackageName: string): string;
 begin
   if StartsText('19', cmbRADVersions.Text) or StartsText('20', cmbRADVersions.Text) then
-    Result := Format('-accept_eulas -i"%s"', [Result, GetItPackageName])
+    Result := Format('-accept_eulas -i"%s"', [GetItPackageName])
   else if StartsText('21', cmbRADVersions.Text) then
-    Result := Format('-ae -i="%s"', [Result, GetItPackageName])
+    Result := Format('-ae -i="%s"', [GetItPackageName])
   else
     raise ENotImplemented.Create(GETIT_VR_NOT_SUPPORTED_MSG);
 end;
@@ -136,46 +136,74 @@ begin
 
   if actInstallOne.Enabled then begin
     actInstallOne.Caption := 'Install ' + ParseGetItName(lbPackages.Items[lbPackages.ItemIndex]);
-    actUninstallOne.Caption := 'Install ' + ParseGetItName(lbPackages.Items[lbPackages.ItemIndex]);
+    actUninstallOne.Caption := 'Uninstall ' + ParseGetItName(lbPackages.Items[lbPackages.ItemIndex]);
   end else begin
     actInstallOne.Caption := 'Install ...';
-    actUninstallOne.Caption := 'Install ...';
+    actUninstallOne.Caption := 'Uninstall ...';
   end;
 end;
 
 procedure TfrmAutoGetItMain.actInstallCheckedExecute(Sender: TObject);
 begin
-  ProcessCheckedPackages(function (const GetItName: string): string
-      begin
-        Result := GetItInstallCmd(GetItName);
-      end);
+  actInstallChecked.Enabled := False;
+  actRefresh.Enabled := False;
+  try
+    ProcessCheckedPackages(function (const GetItName: string): string
+        begin
+          Result := GetItInstallCmd(GetItName);
+        end);
+  finally
+    actInstallChecked.Enabled := True;
+    actRefresh.Enabled := True;
+  end;
 end;
 
 procedure TfrmAutoGetItMain.actUninstallCheckedExecute(Sender: TObject);
 begin
-  ProcessCheckedPackages(function (const GetItName: string): string
-      begin
-        Result := GetItUninstallCmd(GetItName);
-      end);
+  actUninstallChecked.Enabled := False;
+  actRefresh.Enabled := False;
+  try
+    ProcessCheckedPackages(function (const GetItName: string): string
+        begin
+          Result := GetItUninstallCmd(GetItName);
+        end);
+  finally
+    actUninstallChecked.Enabled := True;
+    actRefresh.Enabled := True;
+  end;
 end;
 
 procedure TfrmAutoGetItMain.actInstallOneExecute(Sender: TObject);
 begin
-  frmInstallLog.Initialize;
-  frmInstallLog.ProcessGetItPackage(BDSBinDir,
-             GetItInstallCmd(ParseGetItName(lbPackages.Items[lbPackages.ItemIndex])),
-             1, 1, FInstallAborted);
+  actInstallOne.Enabled := False;
+  actRefresh.Enabled := False;
+  try
+    frmInstallLog.Initialize;
+    frmInstallLog.ProcessGetItPackage(BDSBinDir,
+               GetItInstallCmd(ParseGetItName(lbPackages.Items[lbPackages.ItemIndex])),
+               1, 1, FInstallAborted);
 
-  frmInstallLog.NotifyFinished;
+    frmInstallLog.NotifyFinished;
+  finally
+    actInstallOne.Enabled := True;
+    actRefresh.Enabled := True;
+  end;
 end;
 
 procedure TfrmAutoGetItMain.actUninstallOneExecute(Sender: TObject);
 begin
-  frmInstallLog.Initialize;
-  frmInstallLog.ProcessGetItPackage(BDSBinDir,
-                     GetItUninstallCmd(ParseGetItName(lbPackages.Items[lbPackages.ItemIndex])),
-                     1, 1, FInstallAborted);
-  frmInstallLog.NotifyFinished;
+  actUninstallOne.Enabled := False;
+  actRefresh.Enabled := False;
+  try
+    frmInstallLog.Initialize;
+    frmInstallLog.ProcessGetItPackage(BDSBinDir,
+                       GetItUninstallCmd(ParseGetItName(lbPackages.Items[lbPackages.ItemIndex])),
+                       1, 1, FInstallAborted);
+    frmInstallLog.NotifyFinished;
+  finally
+    actUninstallOne.Enabled := True;
+    actRefresh.Enabled := True;
+  end;
 end;
 
 procedure TfrmAutoGetItMain.actRefreshExecute(Sender: TObject);
